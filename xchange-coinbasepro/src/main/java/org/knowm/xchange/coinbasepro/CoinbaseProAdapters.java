@@ -335,10 +335,8 @@ public class CoinbaseProAdapters {
   public static Trades adaptTrades(CoinbaseProTrade[] coinbaseExTrades, CurrencyPair currencyPair) {
 
     List<Trade> trades = new ArrayList<>(coinbaseExTrades.length);
-
     for (int i = 0; i < coinbaseExTrades.length; i++) {
       CoinbaseProTrade trade = coinbaseExTrades[i];
-
       // yes, sell means buy for coinbasePro reported trades..
       OrderType type = trade.getSide().equals("sell") ? OrderType.BID : OrderType.ASK;
 
@@ -350,6 +348,8 @@ public class CoinbaseProAdapters {
               trade.getPrice(),
               parseDate(trade.getTimestamp()),
               String.valueOf(trade.getTradeId()));
+      t.setMakerOrderId(trade.getMakerOrderId());
+      t.setTakerOrderId(trade.getTakerOrderId());
       trades.add(t);
     }
 
@@ -379,7 +379,13 @@ public class CoinbaseProAdapters {
 
       CurrencyPairMetaData staticMetaData = exchangeMetaData.getCurrencyPairs().get(pair);
       int priceScale = numberOfDecimals(product.getQuoteIncrement());
-      CurrencyPairMetaData cpmd = new CurrencyPairMetaData(null, minSize, maxSize, priceScale);
+      CurrencyPairMetaData cpmd =
+          new CurrencyPairMetaData(
+              null,
+              minSize,
+              maxSize,
+              priceScale,
+              staticMetaData != null ? staticMetaData.getFeeTiers() : null);
       currencyPairs.put(pair, cpmd);
 
       if (!currencies.containsKey(pair.base)) currencies.put(pair.base, null);
